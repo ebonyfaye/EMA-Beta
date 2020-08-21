@@ -1674,9 +1674,11 @@ end
  
 function EMA:QuestMapQuestOptions_AbandonQuest(questID)                       
 	if EMAApi.GetTeamListMaximumOrderOnline() > 1 then	
-		local lastQuestIndex = GetQuestLogSelection()
+		--local lastQuestIndex = GetQuestLogSelection()
+		local lastQuestIndex = C_QuestLog.GetSelectedQuest()
 		--EMA:Print("SetAbandonQuest", lastQuestIndex, questID)
-		title = GetAbandonQuestName()
+		--title = GetAbandonQuestName()
+		local title = QuestUtils_GetQuestName(C_QuestLog.GetAbandonQuest())
 		local data = {}
 		data.questID = questID
 		data.title = title
@@ -1694,12 +1696,14 @@ end
 function EMA:QuestMapQuestOptions_TrackQuest(questID)
 	if EMAApi.GetTeamListMaximumOrderOnline() > 1 then
 		--EMA:Print("test", questID)
-		local questLogIndex = GetQuestLogIndexByID(questID)
-		local title = GetQuestLogTitle( questLogIndex )
+		local title = QuestUtils_GetQuestName(C_QuestLog.GetAbandonQuest())
+		local questLogIndex = C_QuestLog.GetLogIndexForQuestID( questID )
+		
+		
 		local data = {}
 		data.questID = questID
 		data.title = title
-		if ( IsQuestWatched(questLogIndex) ) then
+		if ( QuestUtils_IsQuestWatched(questID) ) then
 			--EMA:Print("TrackingQuest")
 			StaticPopup_Show( "EMA_QUEST_TRACK_ALL_TOONS", title, nil, data )
 		else
@@ -1711,7 +1715,7 @@ end
 
 function EMA:QuestMapQuestOptions_EMA_DoQuestTrack( sender, questID, title, track )
 	--EMA:Print("test1.5", sender, questID, title, track)
-	local questLogIndex = GetQuestLogIndexByID( questID )
+	local questLogIndex = C_QuestLog.GetLogIndexForQuestID( questID )
 	if questLogIndex ~= 0 then
 		if track then
 			EMA:EMADoQuest_TrackQuest( questID, questLogIndex )
@@ -1725,28 +1729,29 @@ end
 
 function EMA:EMADoQuest_TrackQuest(questID, questLogIndex)
 	--EMA:Print("test", questID, questLogIndex )
-	if ( not IsQuestWatched(questID) ) then
-		AddQuestWatch(questLogIndex, true)
+	if ( not QuestUtils_IsQuestWatched(questID) ) then	
+		C_QuestLog.AddQuestWatch(questID, Enum.QuestWatchType.Manual)
 		QuestSuperTracking_OnQuestTracked(questID)
 	end
 end
 
 
 function EMA:EMADoQuest_UnTrackQuest(questID, questLogIndex)
-	--EMA:Print("test2", questID, questLogIndex )
-	if ( IsQuestWatched(questLogIndex) ) then
+	EMA:Print("test2", questID, questLogIndex )
+	if ( QuestUtils_IsQuestWatched(questID) ) then
 		QuestObjectiveTracker_UntrackQuest(nil, questID)
 	end
 end
 
 function EMA:QuestMapQuestOptions_EMA_DoAbandonQuest( sender, questID, title )
-	local questLogIndex = GetQuestLogIndexByID( questID )
-	if questLogIndex ~= 0 then
-		local lastQuestIndex = GetQuestLogSelection();
-		SelectQuestLogEntry(GetQuestLogIndexByID(questID));
-		SetAbandonQuest();
-		AbandonQuest();
-		SelectQuestLogEntry(lastQuestIndex);	
+	--local questLogIndex = GetQuestLogIndexByID( questID )
+	
+	if  questID ~= nil then
+		local oldSelectedQuest = C_QuestLog.GetSelectedQuest()
+		C_QuestLog.SetSelectedQuest(questID)
+		C_QuestLog.SetAbandonQuest()
+		C_QuestLog.AbandonQuest()
+		C_QuestLog.SetSelectedQuest(oldSelectedQuest)	
 		EMA:EMASendMessageToTeam( EMA.db.messageArea, L["QUESTLOG_HAVE_ABANDONED_QUEST"]( title ), false )
 	end		
 end
@@ -1981,9 +1986,9 @@ end
 
 function EMA:GetQuestLogIndexByName( questName )
 	for iterateQuests = 1,C_QuestLog.GetNumQuestLogEntries() do
-        local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( iterateQuests )
+		local info =  C_QuestLog.GetInfo( iterateQuests )
 		if not isHeader then
-			if title == questName then
+			if info.title == questName then
 				return iterateQuests
 			end
 		end

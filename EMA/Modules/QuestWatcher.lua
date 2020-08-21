@@ -1004,15 +1004,16 @@ function EMA:AddQuestWatch( questIndex )
 	--EMA:EMAQuestWatcherScenarioUpdate( true )
 end
 
-function EMA:RemoveQuestWatch( questIndex )
+function EMA:RemoveQuestWatch( questID )
 	if EMA.db.enableQuestWatcher == false then
 		return
     end
-    EMA:DebugMessage( "RemoveQuestWatch", questIndex )
+    EMA:Print( "RemoveQuestWatch", questID )
 	--EMA:UpdateHideBlizzardWatchFrame()
     EMA:ScheduleTimer( "UpdateHideBlizzardWatchFrame", 2 )
-	local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( questIndex )
-    EMA:DebugMessage( "About to call RemoveQuestFromWatchList with value:", questID )
+	--local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( questIndex )
+    --local info =  C_QuestLog.GetInfo( questIndex )
+	EMA:DebugMessage( "About to call RemoveQuestFromWatchList with value:", questID )
 	EMA:RemoveQuestFromWatchList( questID )
 end
 
@@ -1020,7 +1021,8 @@ function EMA:SetAbandonQuest()
 	if EMA.db.enableQuestWatcher == false then
 		return
 	end
-	local questName = GetAbandonQuestName()
+	--local questName = GetAbandonQuestName()
+	local questName = QuestUtils_GetQuestName(C_QuestLog.GetAbandonQuest())
 	if questName ~= nil then
 		local questIndex = EMA:GetQuestLogIndexByName( questName )
 		EMA:SetActiveQuestForQuestWatcherCache( questIndex )
@@ -1203,8 +1205,9 @@ function EMA:SetActiveQuestForQuestWatcherCache( questIndex )
 		return
 	end
 	if questIndex ~= nil then
-        local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( questIndex )
-		EMA.currentQuestForQuestWatcherID = questID
+        --local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( questIndex )
+		local info =  C_QuestLog.GetInfo( questIndex )
+		EMA.currentQuestForQuestWatcherID = info.questID
 	else
 		EMA.currentQuestForQuestWatcherID = nil
 	end
@@ -1633,11 +1636,12 @@ function EMA:RemoveQuestsNotBeingWatched()
 	EMA:UpdateAllQuestsInWatchList()
 	for checkQuestID, value in pairs( EMA.questWatchListOfQuests ) do
 		local found = false
-		for iterateWatchedQuests = 1, GetNumQuestWatches() do
+		for iterateWatchedQuests = 1, C_QuestLog.GetNumQuestWatches() do
 			local questIndex = GetQuestIndexForWatch( iterateWatchedQuests )
 			if questIndex ~= nil then
-                local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( questIndex )
-				if checkQuestID == questID then
+                --local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( questIndex )
+				local info =  C_QuestLog.GetInfo( questIndex )
+				if checkQuestID == info.questID then
 					found = true
 				end
 			end
@@ -1769,14 +1773,9 @@ function EMA:GetQuestHeaderInWatchList( questID, questName, characterName )
 	if ( questItemIcon ~= nil ) then
 		icon = strconcat(" |T"..questItemIcon..":18|t".."  ")
 	end
-	-- TODO CLEAN UP AFTER 8.0
-	-- Ebony incase we wonna use this then there is C_LFGList.CanCreateQuestGroup(questID) 
-	-- that would show the quest using the group finder
-	if EMAPrivate.Core.isBetaBuild() == true then
-		if (C_CampaignInfo.IsCampaignQuest(questID) ) then
+	if (C_CampaignInfo.IsCampaignQuest(questID) ) then
 			--EMA:Print("CampaignQuest", questName)
-			icon = GetInlineFactionIcon()
-		end
+		icon = GetInlineFactionIcon()
 	end	
 	local questWatchInfo = EMA:CreateQuestWatchInfo( questID, "QUEST_HEADER", -1, "", questName, icon )
 	
@@ -2265,7 +2264,7 @@ function EMAQuestMapQuestOptionsDropDown_Initialize(self)
 	local questID = EMAQuestMapQuestOptionsDropDown.questID
 	local questText = EMAQuestMapQuestOptionsDropDown.questText
 	if (questID ~= 0 ) then
-		local questLogIndex = GetQuestLogIndexByID(questID)
+		local questLogIndex = C_QuestLog.GetLogIndexForQuestID(questID)
 		
 		local infoTitle = UIDropDownMenu_CreateInfo()
 		infoTitle.text = questText
@@ -2283,7 +2282,7 @@ function EMAQuestMapQuestOptionsDropDown_Initialize(self)
 		info.checked = false
 		UIDropDownMenu_AddButton(info)
 		
-		if ( GetQuestLogPushable(questLogIndex) and IsInGroup() ) then
+		if ( C_QuestLog.IsPushableQuest(questID) and IsInGroup() ) then
 			info.text = SHARE_QUEST
 			info.func = function(_, questID) EMA:QuestMapQuestOptions_ShareQuest(questID) end
 			info.arg1 = self.questID
@@ -2474,10 +2473,11 @@ end
 -------------------------------------------------------------------------------------------------------------
 
 function EMA:GetQuestLogIndexByName( questName )
-	for iterateQuests = 1, GetNumQuestLogEntries() do
-        local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( iterateQuests )
-		if not isHeader then
-			if title == questName then
+	for iterateQuests = 1, C_QuestLog.GetNumQuestLogEntries() do
+        --local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( iterateQuests )
+		local info =  C_QuestLog.GetInfo( iterateQuests )
+		if not info.isHeader then
+			if info.title == questName then
 				return iterateQuests
 			end
 		end
@@ -2486,10 +2486,11 @@ function EMA:GetQuestLogIndexByName( questName )
 end
 
 function EMA:GetQuestLogIndexByID( inQuestID )
-	for iterateQuests = 1, GetNumQuestLogEntries() do
-        local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( iterateQuests )
-		if not isHeader then
-			if questID == inQuestID then
+	for iterateQuests = 1, C_QuestLog.GetNumQuestLogEntries() do
+        --local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( iterateQuests )
+		local info =  C_QuestLog.GetInfo( iterateQuests )
+		if not info.isHeader then
+			if info.questID == inQuestID then
 				return iterateQuests
 			end
 		end
