@@ -1,0 +1,1 @@
+mklink /d "C:\Program Files (x86)\World of Warcraft\_beta_\Interface\AddOns\EMA" "C:\Users\ebony\Dropbox\EMA-Beta\EMA"
