@@ -150,6 +150,7 @@ end
 
 -- Initialise the module.
 function EMA:OnInitialize()
+	EMA.QUESTWATCHUPDATING = false 
 	EMA.currentAutoQuestPopups = {}
 	EMA.countAutoQuestPopUpFrames = 0
 	EMA.questWatcherFrameCreated = false
@@ -1067,7 +1068,7 @@ end
 
 
 function EMA:SCENARIO_CRITERIA_UPDATE( event, ... )
-	--EMA:Print("test3.5")
+	EMA:Print("test3.5")
 	if EMA.db.enableQuestWatcher == true then
 		-- Wait a bit for the correct information to come through from the server...
 		EMA:ScheduleTimer( "EMAQuestWatcherUpdate", 1, true, "scenario" )	
@@ -1380,50 +1381,59 @@ function EMA:EMAQuestWatcherScenarioUpdate(useCache)
 			end
 		end
 	end
+	EMA.QUESTWATCHUPDATING = false
 end
 
 function EMA:EMAQuestWatcherQuestLogUpdate( useCache )
-
+		if EMA.QUESTWATCHUPDATING == true then
+			return
+		end	
+		--EMA:Print("QUESTWATCHUPDATINGS")
+		EMA.QUESTWATCHUPDATING = true
 		local index = C_QuestLog.GetNumQuestLogEntries()
 		for iterateQuests = 1, index do	
 			local info =  C_QuestLog.GetInfo( iterateQuests )	
-			--EMA:Print("test3", info.title, info.questLogIndex, info.questID, info.campaignID, info.level, info.difficultyLevel, info.suggestedGroup, info.frequency, info.isHeader, info.isCollapsed, info.startEvent, info.isTask, info.isBounty, info.isStory, info.isScaling, info.isOnMap, info.hasLocalPOI, info.isHidden, info.isAutoComplete, info.overridesSortOrder, info.readyForTranslation )
-			local questLogIndex = C_QuestLog.GetLogIndexForQuestID(info.questID)
-			local numObjectives = GetNumQuestLeaderBoards(questLogIndex )
-			local isComplete = C_QuestLog.IsComplete( info.questID)
-			--local isComplete = EMA:IsCompletedAutoCompleteFieldQuest( questIndex, isComplete )
-			if info.isHeader == false and info.isHidden == false then
-		--EMA:Print("EMAQuestData", questID, title, questLogIndex, numObjectives, requiredMoney, isComplete, startEvent, isAutoComplete, failureTime, timeElapsed, questType, isTask, isBounty, isStory, isOnMap, hasLocalPOI, isHidden)										
-			if numObjectives > 0 then							 
-				for iterateObjectives = 1, numObjectives do
-					--EMA:Print( "NumObjs:", numObjectives )
-					local objectiveFullText, objectiveType, objectiveFinished = GetQuestLogLeaderBoard( iterateObjectives, questLogIndex )																								
-					local amountCompleted, objectiveText = EMA:GetQuestObjectiveCompletion( objectiveFullText, objectiveType )
-					
-					if objectiveType == "progressbar" then
-						local progress = GetQuestProgressBarPercent( info.questID )
-						objectiveText = "ProgressBar"..": "..objectiveText 
-						amountCompleted = tostring(progress)..L["%"]
-					end	
-					if objectiveFullText ~= nil then																												
-						--EMA:Print("test2", info.questID, info.title, iterateObjectives, objectiveText, amountCompleted, objectiveFinished, isComplete )
-						if (EMA:QuestCacheUpdate( info.questID, iterateObjectives, amountCompleted, objectiveFinished ) == true) or (useCache == false) then
-							EMA:EMASendCommandToTeam( EMA.COMMAND_QUEST_WATCH_OBJECTIVE_UPDATE, info.questID, info.title, iterateObjectives, objectiveText, amountCompleted, isComplete, isComplete )																		   
+			if info.questID ~= nil and QuestUtils_IsQuestWatched(info.questID) == true then
+				--EMA:Print("testAA", info.title, info.questLogIndex, info.questID, info.campaignID, info.level, info.difficultyLevel, info.suggestedGroup, info.frequency, info.isHeader, info.isCollapsed, info.startEvent, info.isTask, info.isBounty, info.isStory, info.isScaling, info.isOnMap, info.hasLocalPOI, info.isHidden, info.isAutoComplete, info.overridesSortOrder, info.readyForTranslation )
+				local questLogIndex = C_QuestLog.GetLogIndexForQuestID(info.questID)
+				local numObjectives = GetNumQuestLeaderBoards(questLogIndex )
+				local isComplete = C_QuestLog.IsComplete( info.questID)
+				--local isComplete = EMA:IsCompletedAutoCompleteFieldQuest( questIndex, isComplete )
+				if info.isHeader == false and info.isHidden == false then
+				--EMA:Print("EMAQuestData", questID, title, questLogIndex, numObjectives, requiredMoney, isComplete, startEvent, isAutoComplete, failureTime, timeElapsed, questType, isTask, isBounty, isStory, isOnMap, hasLocalPOI, isHidden)										
+				if numObjectives > 0 then							 
+					for iterateObjectives = 1, numObjectives do
+						--EMA:Print( "NumObjs:", numObjectives )
+						local objectiveFullText, objectiveType, objectiveFinished = GetQuestLogLeaderBoard( iterateObjectives, questLogIndex )																								
+						local amountCompleted, objectiveText = EMA:GetQuestObjectiveCompletion( objectiveFullText, objectiveType )
+						
+						if objectiveType == "progressbar" then
+							local progress = GetQuestProgressBarPercent( info.questID )
+							objectiveText = "ProgressBar"..": "..objectiveText 
+							amountCompleted = tostring(progress)..L["%"]
+						end	
+						if objectiveFullText ~= nil then																												
+							--EMA:Print("test2", info.questID, info.title, iterateObjectives, objectiveText, amountCompleted, objectiveFinished, isComplete )
+							if (EMA:QuestCacheUpdate( info.questID, iterateObjectives, amountCompleted, objectiveFinished ) == true) or (useCache == false) then
+								EMA:EMASendCommandToTeam( EMA.COMMAND_QUEST_WATCH_OBJECTIVE_UPDATE, info.questID, info.title, iterateObjectives, objectiveText, amountCompleted, isComplete, isComplete )																		   
+							end
 						end
+					end	
+				else
+					local objectiveFullText = GetQuestLogCompletionText(questLogIndex)
+					local iterateObjectives = 0
+					local amountCompleted, objectiveText = EMA:GetQuestObjectiveCompletion( objectiveFullText )
+					local objectiveFinished = true
+					--EMA:Print("test3", info.questID, info.title, iterateObjectives, objectiveText, amountCompleted, objectiveFinished, isComplete )
+					if (EMA:QuestCacheUpdate( info.questID, info.title, amountCompleted, objectiveFinished ) == true) or (useCache == false) then
+						EMA:EMASendCommandToTeam( EMA.COMMAND_QUEST_WATCH_OBJECTIVE_UPDATE, info.questID, info.title, iterateObjectives, objectiveText, amountCompleted, isComplete, isComplete )
 					end
-				end	
-			else
-				local objectiveFullText = GetQuestLogCompletionText(questLogIndex)
-				local iterateObjectives = 0
-				local amountCompleted, objectiveText = EMA:GetQuestObjectiveCompletion( objectiveFullText )
-				local objectiveFinished = true
-				--EMA:Print("test3", info.questID, info.title, iterateObjectives, objectiveText, amountCompleted, objectiveFinished, isComplete )
-				if (EMA:QuestCacheUpdate( info.questID, info.title, amountCompleted, objectiveFinished ) == true) or (useCache == false) then
-					EMA:EMASendCommandToTeam( EMA.COMMAND_QUEST_WATCH_OBJECTIVE_UPDATE, info.questID, info.title, iterateObjectives, objectiveText, amountCompleted, isComplete, isComplete )
 				end
-			end
-		end			
+			end			
+		end
 	end
+	--EMA:Print("QUESTWATCHUPDATING DONE")
+	EMA.QUESTWATCHUPDATING = false
 end
 
 function EMA:EMAQuestWatcherWorldQuestUpdate( useCache )
@@ -1448,23 +1458,24 @@ function EMA:EMAQuestWatcherWorldQuestUpdate( useCache )
 					local progress = GetQuestProgressBarPercent( info.questID )
 					local amountCompleted = tostring(progress)..L["%"]																											
 					--EMA:Print("QuestPercent", title, objectiveText, amountCompleted )
-					local name = tostring("Bonus:")..(title)	
-					--EMA:Print("BarQuest", questID, title, iterateObjectives, objectiveText, amountCompleted, objectiveFinished, isComplete)
-					if (EMA:QuestCacheUpdate( questID, iterateObjectives, amountCompleted, objectiveFinished ) == true) or (useCache == false) then
-						EMA:EMASendCommandToTeam( EMA.COMMAND_QUEST_WATCH_OBJECTIVE_UPDATE, questID, name, iterateObjectives, objectiveText, amountCompleted, objectiveFinished, isComplete )															 
+					local EditedQuestName = tostring("Bonus:")..(info.title)	
+					EMA:Print("BarQuest", info.questID, name, iterateObjectives, objectiveText, amountCompleted, objectiveFinished, isComplete)
+					if (EMA:QuestCacheUpdate( info.questID, iterateObjectives, amountCompleted, objectiveFinished ) == true) or (useCache == false) then
+						EMA:EMASendCommandToTeam( EMA.COMMAND_QUEST_WATCH_OBJECTIVE_UPDATE, info.questID, EditedQuestName, iterateObjectives, objectiveText, amountCompleted, objectiveFinished, isComplete )															 
 					end
 			else
 				local amountCompleted, objectiveText = EMA:GetQuestObjectiveCompletion( objectiveFullText )
-				if (EMA:QuestCacheUpdate( questID, iterateObjectives, amountCompleted, objectiveFinished ) == true) or (useCache == false) then									   
+				if (EMA:QuestCacheUpdate( info.questID, iterateObjectives, amountCompleted, objectiveFinished ) == true) or (useCache == false) then									   
 					--EMA:Print( "UPDATE:", "cache:", useCache, "QuestID", questID, "ObjectID", iterateObjectives )
-					--EMA:Print("sendingquestdata", objectiveText, amountCompleted, finished )
-					local name = tostring("Bonus:")..(title)
-					EMA:EMASendCommandToTeam( EMA.COMMAND_QUEST_WATCH_OBJECTIVE_UPDATE, info.questID, info.name, iterateObjectives, objectiveText, amountCompleted, objectiveFinished, isComplete )
+					EMA:Print("sendingquestdata", info.title, info.questID, objectiveText, amountCompleted, finished )
+					local name = tostring("Bonus:")..(info.title)
+					EMA:EMASendCommandToTeam( EMA.COMMAND_QUEST_WATCH_OBJECTIVE_UPDATE, info.questID, name, iterateObjectives, objectiveText, amountCompleted, objectiveFinished, isComplete )
 					end
 				end
 			end
 		end	
-	end	
+	end
+	EMA.QUESTWATCHUPDATING = false	
 end
 
 function EMA:EMAQuestWatcherUpdate( useCache, questType )
@@ -1479,7 +1490,7 @@ function EMA:EMAQuestWatcherUpdate( useCache, questType )
 		EMA:EMAQuestWatcherQuestLogUpdate( useCache )
 	end
 	if questType == "worldQuest" or "all" then
-		--EMA:EMAQuestWatcherWorldQuestUpdate( useCache )
+		EMA:EMAQuestWatcherWorldQuestUpdate( useCache )
 	end
 end
 
@@ -1637,11 +1648,17 @@ function EMA:RemoveQuestsNotBeingWatched()
 	for checkQuestID, value in pairs( EMA.questWatchListOfQuests ) do
 		local found = false
 		for iterateWatchedQuests = 1, C_QuestLog.GetNumQuestWatches() do
-			local questIndex = GetQuestIndexForWatch( iterateWatchedQuests )
+			--EMA:Print("test", iterateWatchedQuests )
+			--local questIndex = GetQuestIndexForWatch( iterateWatchedQuests )
+			local info =  C_QuestLog.GetInfo( iterateWatchedQuests )	
+			local questIndex = C_QuestLog.GetLogIndexForQuestID(info.questID)
+			
 			if questIndex ~= nil then
                 --local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( questIndex )
-				local info =  C_QuestLog.GetInfo( questIndex )
+				--EMA:Print("test", questIndex, info.questID, "vs", checkQuestID )
+				--local info =  C_QuestLog.GetInfo( questIndex )
 				if checkQuestID == info.questID then
+					--EMA:Print("foundQuest", info.title)
 					found = true
 				end
 			end

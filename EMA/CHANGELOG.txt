@@ -2,7 +2,7 @@
 ChangeLogs:
 ---------------------------
 
-EMA Version: v9.0.0-Release-v3.0(0147)
+EMA Version: v9.0.0-Beta-v3.0(0146-0149)
 Game Version: 9.0.0
 Release Date: TBA
 
