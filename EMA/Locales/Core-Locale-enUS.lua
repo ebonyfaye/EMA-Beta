@@ -646,7 +646,7 @@ L["FOCUS"] = "Not Focus!"
 L["LOW_HEALTH"] = "Low Health!"
 L["LOW_MANA"] = "Low Mana!"
 L["BAGS_FULL"] = "Bags Full!"
-L["CCED"] = "I'm"
+L["CCED"] = "I've Been"
 -- Vendor
 L["AUTO_REPAIR"] = "Auto Repair"
 L["AUTO_REPAIR_HELP"] = "Auto Repairs Toon's Items When You Visit a Repair Merchant"

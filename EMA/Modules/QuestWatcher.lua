@@ -1009,7 +1009,7 @@ function EMA:RemoveQuestWatch( questID )
 	if EMA.db.enableQuestWatcher == false then
 		return
     end
-    EMA:Print( "RemoveQuestWatch", questID )
+    --EMA:Print( "RemoveQuestWatch", questID )
 	--EMA:UpdateHideBlizzardWatchFrame()
     EMA:ScheduleTimer( "UpdateHideBlizzardWatchFrame", 2 )
 	--local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( questIndex )
@@ -1068,7 +1068,7 @@ end
 
 
 function EMA:SCENARIO_CRITERIA_UPDATE( event, ... )
-	EMA:Print("test3.5")
+	--EMA:Print("test3.5")
 	if EMA.db.enableQuestWatcher == true then
 		-- Wait a bit for the correct information to come through from the server...
 		EMA:ScheduleTimer( "EMAQuestWatcherUpdate", 1, true, "scenario" )	
@@ -1467,7 +1467,7 @@ function EMA:EMAQuestWatcherWorldQuestUpdate( useCache )
 				local amountCompleted, objectiveText = EMA:GetQuestObjectiveCompletion( objectiveFullText )
 				if (EMA:QuestCacheUpdate( info.questID, iterateObjectives, amountCompleted, objectiveFinished ) == true) or (useCache == false) then									   
 					--EMA:Print( "UPDATE:", "cache:", useCache, "QuestID", questID, "ObjectID", iterateObjectives )
-					EMA:Print("sendingquestdata", info.title, info.questID, objectiveText, amountCompleted, finished )
+					--EMA:Print("sendingquestdata", info.title, info.questID, objectiveText, amountCompleted, finished )
 					local name = tostring("Bonus:")..(info.title)
 					EMA:EMASendCommandToTeam( EMA.COMMAND_QUEST_WATCH_OBJECTIVE_UPDATE, info.questID, name, iterateObjectives, objectiveText, amountCompleted, objectiveFinished, isComplete )
 					end
@@ -1647,21 +1647,10 @@ function EMA:RemoveQuestsNotBeingWatched()
 	EMA:UpdateAllQuestsInWatchList()
 	for checkQuestID, value in pairs( EMA.questWatchListOfQuests ) do
 		local found = false
-		for iterateWatchedQuests = 1, C_QuestLog.GetNumQuestWatches() do
-			--EMA:Print("test", iterateWatchedQuests )
-			--local questIndex = GetQuestIndexForWatch( iterateWatchedQuests )
-			local info =  C_QuestLog.GetInfo( iterateWatchedQuests )	
-			local questIndex = C_QuestLog.GetLogIndexForQuestID(info.questID)
-			
-			if questIndex ~= nil then
-                --local title, level, suggestedGroup, isHeader, isCollapsed, isComplete, frequency, questID, startEvent, displayQuestID, isOnMap, hasLocalPOI, isTask, isStory = GetQuestLogTitle( questIndex )
-				--EMA:Print("test", questIndex, info.questID, "vs", checkQuestID )
-				--local info =  C_QuestLog.GetInfo( questIndex )
-				if checkQuestID == info.questID then
-					--EMA:Print("foundQuest", info.title)
-					found = true
-				end
-			end
+		local IsOnQuest = C_QuestLog.IsOnQuest(checkQuestID)
+		if IsOnQuest == true then
+			--EMA:Print("foundQuest", checkQuestID)
+			found = true
 		end
 		if found == false then
 			EMA:RemoveQuestFromWatchList( checkQuestID )

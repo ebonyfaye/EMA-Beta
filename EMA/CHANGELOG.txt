@@ -2,15 +2,23 @@
 ChangeLogs:
 ---------------------------
 
-EMA Version: v9.0.0-Beta-v3.0(0146-0149)
+EMA Version: v9.0.0-Beta-v3.0(0146-0150)
 Game Version: 9.0.0
 Release Date: TBA
 
 ## 9.0 Initial release
 
-### Known issues 
-	- ItemBar is not working at all, and lua errors
+### Known issues.
 
+
+## Toon
+	-- CC warn, Now shows the spell that was casted on the player
+	
+	
+## ItemBar
+	-- Should Now work with Spells and Toys.
+	
+	
 
 
 
