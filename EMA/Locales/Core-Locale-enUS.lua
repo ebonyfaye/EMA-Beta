@@ -840,6 +840,7 @@ L["TRACK_ALL_TOOLTIP"] = "Track All Quests On All Minions"
 L["UNTRACK_ALL"] = "Untrack All"
 L["UNTRACK_ALL_TOOLTIP"] = "Untrack All Quests on all Minions"
 L["ABANDONING_ALLQUEST"] = "Abandoning Quests To All Toons"
+L["AM_I_TALKING_TO_A_NPC"] = "Am I Talking To A NPC"
 
 -- Quest Strings
 L["AUTOMATICALLY_ACCEPTED_ESCORT_QUEST"] = function( questName )

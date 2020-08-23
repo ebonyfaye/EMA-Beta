@@ -2,7 +2,7 @@
 ChangeLogs:
 ---------------------------
 
-EMA Version: v9.0.0-Beta-v3.0(0146-0150)
+EMA Version: v9.0.0-Beta-v3.0(0146-0151)
 Game Version: 9.0.0
 Release Date: TBA
 
@@ -17,10 +17,6 @@ Release Date: TBA
 	
 ## ItemBar
 	-- Should Now work with Spells and Toys.
-	
-	
-
-
 
 ---------------------------
 

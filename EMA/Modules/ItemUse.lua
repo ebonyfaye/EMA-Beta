@@ -482,9 +482,15 @@ end
 
 --ebony test Using the wowapi and not the scanning of tooltips
 function EMA:CheckForQuestItemAndAddToBar()	
-	for iterateQuests = 1, GetNumQuestLogEntries() do
-		local questLogTitleText,_,_,isHeader, _, _, _, questID = GetQuestLogTitle(iterateQuests)
-		if not isHeader then
+	--for iterateQuests = 1, GetNumQuestLogEntries() do
+	--	local questLogTitleText,_,_,isHeader, _, _, _, questID = GetQuestLogTitle(iterateQuests)
+	
+	local index = C_QuestLog.GetNumQuestLogEntries()
+		for iterateQuests = 1, index do	
+			local info =  C_QuestLog.GetInfo( iterateQuests )	
+		
+		
+		if not info.isHeader then
 			--EMA:Print("test", questItemLink, iterateQuests, questLogTitleText, questID )
 			local questItemLink, questItemIcon, questItemCharges = GetQuestLogSpecialItemInfo( iterateQuests )	
 			if questItemLink ~= nil then
