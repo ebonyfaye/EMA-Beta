@@ -160,7 +160,7 @@ local function InitializePopupDialogs()
 		hideOnEscape = 1,
         OnAccept = function( self )
 			--EMA:Print("Button1")
-			AbandonQuest()
+			C_QuestLog.AbandonQuest()
 		end,
 		OnAlt = function ( self )
 			--EMA:Print("Button3")
@@ -1674,10 +1674,8 @@ end
  
 function EMA:QuestMapQuestOptions_AbandonQuest(questID)                       
 	if EMAApi.GetTeamListMaximumOrderOnline() > 1 then	
-		--local lastQuestIndex = GetQuestLogSelection()
 		local lastQuestIndex = C_QuestLog.GetSelectedQuest()
 		--EMA:Print("SetAbandonQuest", lastQuestIndex, questID)
-		--title = GetAbandonQuestName()
 		local title = QuestUtils_GetQuestName(C_QuestLog.GetAbandonQuest())
 		local data = {}
 		data.questID = questID

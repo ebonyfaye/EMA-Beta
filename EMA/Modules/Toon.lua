@@ -1593,7 +1593,7 @@ function EMA:LOSS_OF_CONTROL_ADDED( event, ... )
 			local LossOfControlData = C_LossOfControl.GetActiveLossOfControlData(eventIndex)
 			--local locType, spellID, text, iconTexture, startTime, timeRemaining, duration, lockoutSchool, priority, displayType	
 			local name, rank, icon, castTime, minRange, maxRange, spellId =  GetSpellInfo( LossOfControlData.spellID )
-			EMA:Print("test", LossOfControlData.spellID, name )
+			--EMA:Print("test", LossOfControlData.spellID, name )
 			if EMAApi.IsCharacterTheMaster( EMA.characterName ) == false and name ~= nil then
 				EMA:EMASendMessageToTeam( EMA.db.warningArea, EMA.db.CcMessage..L[" "].. name, false )
 			end
